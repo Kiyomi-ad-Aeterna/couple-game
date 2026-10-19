@@ -7,27 +7,29 @@
         body { text-align: center; font-family: sans-serif; background-color: #f0f2f5; margin-top: 50px; }
         h1 { color: #333; }
         #game-board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; justify-content: center; margin: 20px auto; }
-        .tile { width: 100px; height: 100px; background: #fff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 45px; user-select: none; }
+        .tile { width: 100px; height: 100px; background: #fff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 45px; user-select: none; box-sizing: border-box; }
         #score { font-size: 20px; color: #e74c3c; font-weight: bold; }
+        #tip { color: #666; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <h1>😂 寻找你的好朋友！</h1>
-    <p>点击相同的表情进行消除，获得积分！</p>
+    <h1>😂 寻找相同的好友表情！</h1>
+    <p id="tip">点击两个相同的表情进行配对消除得分！</p>
     <div id="score">得分: 0</div>
     <div id="game-board"></div>
 
     <script>
-        // 用可爱的表情符号代替图片，省去所有上传烦恼！
         const emojis = ['🐶', '🐱', '🐼', '🦊', '🐸'];
-
         let score = 0;
+        let selectedTile = null; // 记录当前选中的格子
+
         const board = document.getElementById('game-board');
         const scoreDisplay = document.getElementById('score');
 
         function initGame() {
             board.innerHTML = '';
+            selectedTile = null;
             for (let i = 0; i < 9; i++) {
                 const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
                 const tile = document.createElement('div');
@@ -35,9 +37,39 @@
                 tile.innerText = randomEmoji;
 
                 tile.onclick = function() {
-                    score += 10;
-                    scoreDisplay.innerText = "得分: " + score;
-                    tile.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                    // 如果点击的是已经选中的格子，取消选中
+                    if (selectedTile === tile) {
+                        tile.style.border = 'none';
+                        selectedTile = null;
+                        return;
+                    }
+
+                    if (!selectedTile) {
+                        // 第一次点击：选中这个格子（加红框）
+                        selectedTile = tile;
+                        tile.style.border = '4px solid #e74c3c';
+                    } else {
+                        // 第二次点击：判断图案是否相同
+                        if (selectedTile.innerText === tile.innerText) {
+                            // 相同！加分并刷新这两个格子
+                            score += 20;
+                            scoreDisplay.innerText = "得分: " + score;
+                            
+                            selectedTile.style.border = 'none';
+                            tile.style.border = 'none';
+
+                            // 换成新的随机表情
+                            selectedTile.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                            tile.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                            
+                            selectedTile = null;
+                        } else {
+                            // 不同：取消上一个的高亮，把当前格子设为选中状态
+                            selectedTile.style.border = 'none';
+                            selectedTile = tile;
+                            tile.style.border = '4px solid #e74c3c';
+                        }
+                    }
                 };
 
                 board.appendChild(tile);
